@@ -1,0 +1,20 @@
+# PersonalOS Configuration
+# Customize these settings for your own setup.
+
+[directories]
+entities = "entities"
+views = "views"
+exports = "exports"
+schema = "schema"
+
+[id_prefixes]
+project = "prj_"
+task = "tsk_"
+tool = "tool_"
+contact = "contact_"
+application = "app_"
+decision = "dec_"
+review = "rev_"
+
+[review]
+default_author = ""

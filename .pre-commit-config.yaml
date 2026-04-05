@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: personalos-validate
+        name: Validate PersonalOS entities
+        entry: python -m cli.personalos.main validate
+        language: system
+        pass_filenames: false
+        always_run: true

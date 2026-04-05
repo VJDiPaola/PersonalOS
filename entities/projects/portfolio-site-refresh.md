@@ -1,0 +1,28 @@
+---
+id: prj_01JYV4R2D3J7M7X9Q0N2K8A6P1
+type: project
+slug: portfolio-site-refresh
+title: Portfolio Site Refresh
+status: building
+priority: high
+created_at: 2026-03-15
+updated_at: 2026-04-04
+tags: [portfolio, design, writing]
+tool_ids: [tool_01JYV6X1A2B3C4D5E6F7G8H9J0, tool_01JYV6Y2B3C4D5E6F7G8H9J0K1]
+contact_ids: [contact_01JYV7A1C2D3E4F5G6H7J8K9M0]
+---
+
+# Portfolio Site Refresh
+
+Redesign the personal portfolio site with updated case studies, cleaner layout, and improved performance.
+
+## Goals
+
+- Rewrite the landing page copy
+- Add three new case studies
+- Improve Lighthouse score to 95+
+- Deploy on a custom domain
+
+## Notes
+
+Design direction is minimal and content-forward. Using Figma for mockups and Linear for task tracking.

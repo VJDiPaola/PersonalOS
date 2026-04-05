@@ -1,0 +1,15 @@
+{
+  "id": "tool_01JYV6Z3C4D5E6F7G8H9J0K1W2",
+  "type": "tool",
+  "slug": "figma",
+  "title": "Figma",
+  "status": "active",
+  "created_at": "2026-01-10",
+  "updated_at": "2026-03-15",
+  "tags": [
+    "design",
+    "ui"
+  ],
+  "url": "https://figma.com",
+  "category": "design"
+}

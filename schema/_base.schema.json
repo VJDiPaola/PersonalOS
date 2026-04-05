@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://personalos.dev/schema/_base.schema.json",
+  "title": "PersonalOS Base Entity",
+  "description": "Shared identity and metadata fields for all PersonalOS entities.",
+  "type": "object",
+  "$defs": {
+    "ulid_id": {
+      "type": "string",
+      "pattern": "^(prj_|tsk_|tool_|contact_|app_|dec_|rev_)[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Prefixed ULID identifier."
+    },
+    "iso_date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "ISO 8601 date (YYYY-MM-DD)."
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "URL-safe, lowercase, hyphen-separated identifier."
+    },
+    "entity_type": {
+      "type": "string",
+      "enum": ["project", "task", "tool", "contact", "application", "decision", "review"]
+    },
+    "tag_list": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true,
+      "default": []
+    },
+    "id_list": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ulid_id" },
+      "uniqueItems": true,
+      "default": []
+    }
+  },
+  "properties": {
+    "id": { "$ref": "#/$defs/ulid_id" },
+    "type": { "$ref": "#/$defs/entity_type" },
+    "slug": { "$ref": "#/$defs/slug" },
+    "title": { "type": "string", "minLength": 1 },
+    "status": { "type": "string" },
+    "created_at": { "$ref": "#/$defs/iso_date" },
+    "updated_at": { "$ref": "#/$defs/iso_date" },
+    "tags": { "$ref": "#/$defs/tag_list" }
+  },
+  "required": ["id", "type", "slug", "title", "status", "created_at", "updated_at"]
+}
