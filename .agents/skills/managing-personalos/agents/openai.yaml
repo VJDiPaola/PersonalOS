@@ -1,0 +1,4 @@
+interface:
+  display_name: "Managing PersonalOS"
+  short_description: "Build and maintain the public starter repo"
+  default_prompt: "Use $managing-personalos to scaffold, document, validate, or polish the PersonalOS public starter repo while keeping all sample data public-safe and reusable."
