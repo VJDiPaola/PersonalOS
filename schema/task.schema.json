@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://personalos.dev/schema/task.schema.json",
+  "title": "PersonalOS task entity",
+  "allOf": [
+    {
+      "$ref": "https://personalos.dev/schema/base.schema.json"
+    },
+    {
+      "type": "object",
+      "required": [
+        "project_id",
+        "priority",
+        "energy"
+      ],
+      "properties": {
+        "type": {
+          "const": "task"
+        },
+        "status": {
+          "enum": [
+            "backlog",
+            "ready",
+            "in_progress",
+            "blocked",
+            "done",
+            "archived"
+          ]
+        },
+        "project_id": {
+          "type": "string",
+          "pattern": "^prj_[a-z0-9_]+$"
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "energy": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "due_on": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    }
+  ]
+}

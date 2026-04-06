@@ -1,112 +1,75 @@
 # PersonalOS Blueprint
 
-## Goal
+## Purpose
 
-Build a public starter repo for a markdown-first personal operating system that feels professional, cloneable, and extensible.
+This document captures the product direction for PersonalOS beyond the currently shipped starter slice.
 
-This repo is not meant to contain anyone's real private operating data.
+The repo now includes a working vertical slice for:
 
-It should provide:
+- `projects`
+- `tasks`
+- `decisions`
 
-- architecture
-- schema contracts
-- CLI scaffolding
-- sample entities
-- generated example views
-- tests
+The blueprint below describes the standard future additions should meet.
 
-## Product Positioning
+## Current Product Bar
 
-PersonalOS should feel like a real starter product, not a dump of somebody else's private notes.
+The starter should always feel:
 
-That means:
+- cloneable
+- deterministic
+- public-safe
+- easy to understand in the first 10 minutes
+- useful even before a user customizes it
 
-- clean docs
-- believable example data
-- deterministic generated outputs
-- one obvious path to get started
+If a proposed change makes the repo feel more like someone else's sanitized private workspace, it misses the point.
 
 ## Design Principles
 
 ### 1. Schema First
 
-Entity rules should be defined once and reused everywhere.
-
-The schema layer should drive:
+Entity rules should be defined once and reused across:
 
 - validation
-- templates
-- docs
-- generators
+- documentation
+- generation
+- fixtures
 
 ### 2. Source vs Views vs Exports
 
 - `entities/` holds canonical records
-- `views/` holds generated human-facing dashboards and reports
-- `exports/` holds generated AI and JSON outputs
+- `views/` holds generated human-facing outputs
+- `exports/` holds generated assistant and JSON context
 
 ### 3. Stable Identity
 
-Every entity should have:
+Every entity should keep a stable `id`, readable `slug`, and explicit lifecycle state.
 
-- `id`
-- `type`
-- `slug`
-- `title`
-- `created_at`
-- `updated_at`
+### 4. Cross-Platform By Default
 
-### 4. Clean Lifecycle Modeling
+The starter should remain comfortable on Windows, macOS, and Linux, with Python as the current implementation path.
 
-Projects should use explicit lifecycle states:
-
-- `idea`
-- `active`
-- `building`
-- `deploy_ready`
-- `shipped`
-- `reviewed`
-- `archived`
-
-### 5. Cross-Platform by Default
-
-The engine should work well on Windows, macOS, and Linux.
-
-### 6. Starter Quality Matters
-
-The first 10 minutes should be good enough that someone immediately understands:
-
-- what the system does
-- how to add a project
-- how to generate a dashboard
-- how to adapt it to their own life
-
-## Target Structure
+## Current Structure
 
 ```text
 PersonalOS/
   README.md
+  CONTRIBUTING.md
+  LICENSE
   docs/
     blueprint.md
     architecture.md
     schema.md
     quickstart.md
   schema/
+    base.schema.json
     project.schema.json
     task.schema.json
-    tool.schema.json
-    contact.schema.json
-    application.schema.json
     decision.schema.json
-    review.schema.json
   entities/
     projects/
     tasks/
-    tools/
-    contacts/
-    applications/
     decisions/
-    reviews/
   views/
     dashboard.example.md
   exports/
@@ -119,47 +82,39 @@ PersonalOS/
     golden/
 ```
 
-## Recommended CLI
+## Recommended Next Additions
 
-```text
-personalos init
-personalos check
-personalos validate
-personalos generate all
-personalos generate dashboard
-personalos generate contexts
-personalos new project "Project Name"
-personalos new task "Task Name"
-personalos review create
-personalos archive --dry-run
-```
+Once the shipped slice feels stable, the most natural next areas are:
 
-## Suggested Implementation
+1. `tool`
+2. `review`
+3. `contact`
+4. `application`
 
-Recommended stack:
+Each addition should arrive with:
 
-- Python
-- `typer`
-- `pydantic`
-- YAML frontmatter parsing
-- golden-file tests
+- a schema
+- believable sample records
+- generator updates
+- tests
+- doc updates
 
-## Example Entity Contract
+## CLI Direction
 
-```yaml
----
-id: prj_01JYV4R2D3J7M7X9Q0N2K8A6P1
-type: project
-slug: portfolio-site-refresh
-title: Portfolio Site Refresh
-status: building
-priority: high
-created_at: 2026-04-04
-updated_at: 2026-04-04
-tags: [portfolio, design, writing]
-tool_ids: [tool_claude, tool_linear]
----
-```
+Shipped today:
+
+- `personalos init`
+- `personalos validate`
+- `personalos generate dashboard`
+- `personalos generate contexts`
+- `personalos generate all`
+
+Likely next commands:
+
+- `personalos new project`
+- `personalos new task`
+- `personalos review create`
+- `personalos archive --dry-run`
 
 ## Public Starter Content Rules
 
@@ -168,34 +123,12 @@ Include:
 - fake sample projects
 - fake sample tasks
 - fake sample decisions
-- clear example reviews
-- screenshots or example outputs
+- useful generated examples
 
 Never include:
 
 - real contacts
-- real applications
-- private strategy
-- personal runway or financial data
+- real job applications
+- internal-only links
 - secrets or `.env` values
-
-## Near-Term Build Plan
-
-1. Add architecture and schema docs.
-2. Define the first entity schemas.
-3. Scaffold the CLI.
-4. Add example entities.
-5. Generate the first sample dashboard.
-6. Add tests.
-
-## Standard of Quality
-
-PersonalOS should feel:
-
-- useful
-- legible
-- opinionated
-- safe to clone
-- easy to extend
-
-If it feels like a private vault that was merely cleaned up, it is not ready yet.
+- private finance or strategy notes

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://personalos.dev/schema/project.schema.json",
+  "title": "PersonalOS project entity",
+  "allOf": [
+    {
+      "$ref": "https://personalos.dev/schema/base.schema.json"
+    },
+    {
+      "type": "object",
+      "required": [
+        "priority",
+        "horizon"
+      ],
+      "properties": {
+        "type": {
+          "const": "project"
+        },
+        "status": {
+          "enum": [
+            "idea",
+            "active",
+            "building",
+            "deploy_ready",
+            "shipped",
+            "reviewed",
+            "archived"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "horizon": {
+          "type": "string",
+          "enum": [
+            "now",
+            "next",
+            "later"
+          ]
+        }
+      }
+    }
+  ]
+}

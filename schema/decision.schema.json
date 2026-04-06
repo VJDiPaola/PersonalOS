@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://personalos.dev/schema/decision.schema.json",
+  "title": "PersonalOS decision entity",
+  "allOf": [
+    {
+      "$ref": "https://personalos.dev/schema/base.schema.json"
+    },
+    {
+      "type": "object",
+      "required": [
+        "project_id",
+        "decision_date",
+        "outcome",
+        "related_task_ids"
+      ],
+      "properties": {
+        "type": {
+          "const": "decision"
+        },
+        "status": {
+          "enum": [
+            "proposed",
+            "decided",
+            "rejected",
+            "archived"
+          ]
+        },
+        "project_id": {
+          "type": "string",
+          "pattern": "^prj_[a-z0-9_]+$"
+        },
+        "decision_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "commit",
+            "hold",
+            "revisit"
+          ]
+        },
+        "related_task_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^tsk_[a-z0-9_]+$"
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  ]
+}
