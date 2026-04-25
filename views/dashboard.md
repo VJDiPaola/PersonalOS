@@ -1,7 +1,5 @@
 # PersonalOS Dashboard
 
-*Generated on 2026-04-04*
-
 ## Projects
 
 ### Active
