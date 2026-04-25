@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://personalos.dev/schema/review.schema.json",
+  "title": "PersonalOS Review",
+  "description": "Schema for weekly review entities.",
+  "type": "object",
+  "allOf": [
+    { "$ref": "_base.schema.json" }
+  ],
+  "properties": {
+    "type": { "const": "review" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "published", "archived"]
+    },
+    "period": { "type": "string", "minLength": 1 },
+    "highlights": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "lowlights": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "next_actions": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["id", "type", "slug", "title", "status", "period", "created_at", "updated_at"]
+}

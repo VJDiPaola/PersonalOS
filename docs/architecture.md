@@ -2,93 +2,120 @@
 
 ## Overview
 
-PersonalOS is a markdown-first starter organized around one core rule: canonical records live in `entities/`, and every human-facing or AI-facing view is generated from those records.
+PersonalOS is a markdown-first personal operating system built on three layers:
 
-The current shipped slice covers:
+1. **Source** (`entities/`) — canonical records authored by humans
+2. **Views** (`views/`) — generated human-readable dashboards and reports
+3. **Exports** (`exports/`) — generated machine-readable JSON and AI context files
 
-- `projects`
-- `tasks`
-- `decisions`
+Schemas (`schema/`) define the contracts that bind all three layers together. The CLI (`personalos`) is the single tool that validates, generates, and manages the system.
 
-## Source Of Truth
+## Directory Layout
 
 ```text
-schema/   -> machine-readable contracts
-entities/ -> canonical markdown records with YAML frontmatter
-views/    -> generated human-readable outputs
-exports/  -> generated markdown and JSON assistant context
-cli/      -> validation and generation commands
-tests/    -> fixtures and golden parity checks
+PersonalOS/
+  schema/             # JSON Schema contracts
+  entities/           # Canonical markdown records (source of truth)
+    projects/
+    tasks/
+    tools/
+    contacts/
+    applications/
+    decisions/
+    reviews/
+  views/              # Generated human-readable output
+    dashboard.md
+    graph.mmd
+  exports/            # Generated machine-readable output
+    context/
+    json/
+  cli/                # CLI source code
+    personalos/
+  tests/              # Validation, smoke, and golden tests
+    fixtures/
+    golden/
+  docs/               # Documentation
 ```
 
-This separation is deliberate:
+## Entity Identity Model
 
-- editing happens in `entities/`
-- validation is driven by `schema/`
-- `views/` and `exports/` can always be regenerated
+Every entity has a shared set of identity fields:
 
-## Data Flow
+- `id` — globally unique, prefixed ULID (e.g. `prj_01JYV4R2D3J7M7X9Q0N2K8A6P1`)
+- `type` — entity kind (`project`, `task`, `tool`, `contact`, `application`, `decision`, `review`)
+- `slug` — URL-safe, human-readable identifier derived from the title
+- `title` — display name
+- `status` — lifecycle state (varies by entity type)
+- `created_at` — ISO 8601 date
+- `updated_at` — ISO 8601 date
+- `tags` — freeform labels for filtering and grouping
 
-1. A builder adds or edits markdown records in `entities/`.
-2. `personalos validate` parses each file, validates frontmatter against JSON Schema, checks cross-entity references, and rejects obviously private content.
-3. `personalos generate dashboard` renders a deterministic markdown dashboard for people.
-4. `personalos generate contexts` renders deterministic markdown and JSON exports for AI workflows or downstream automation.
-5. Tests assert that sample data still validates and generated outputs still match the committed examples.
+### ID Prefix Map
 
-## Entity Model
+| Type        | Prefix     |
+|-------------|------------|
+| project     | `prj_`     |
+| task        | `tsk_`     |
+| tool        | `tool_`    |
+| contact     | `contact_` |
+| application | `app_`     |
+| decision    | `dec_`     |
+| review      | `rev_`     |
 
-Every shipped entity shares a base contract:
+Prefixes are customizable via `personalos.toml`.
 
-- `id`
-- `type`
-- `slug`
-- `title`
-- `status`
-- `created_at`
-- `updated_at`
-- `tags`
-- `summary`
+### Relationships
 
-Specialized fields extend the base:
+Entities reference each other by stable ID:
 
-- projects add `priority` and `horizon`
-- tasks add `project_id`, `priority`, `energy`, and optional `due_on`
-- decisions add `project_id`, `decision_date`, `outcome`, and `related_task_ids`
+- `project_id` — links a task to its parent project
+- `tool_ids` — links an entity to the tools it uses
+- `contact_ids` — links an entity to related people
+- `related_entity_ids` — generic cross-references
 
-## Validation Model
+Freeform string references should be avoided where a stable ID can be used.
 
-Validation happens in layers:
+## Lifecycle States
 
-1. Frontmatter shape and field constraints via JSON Schema.
-2. Relationship checks such as `task.project_id` and `decision.related_task_ids`.
-3. Public-safety checks that reject email addresses, secret-like tokens, and obvious private finance language inside starter entities.
+### Projects
 
-This layered approach keeps the repo understandable for humans while still giving automation a reliable contract.
+```text
+idea → active → building → deploy_ready → shipped → reviewed → archived
+```
 
-## Generation Model
+### Tasks
 
-The current generator writes three committed outputs:
+```text
+todo → in_progress → blocked → done → archived
+```
 
-- [`views/dashboard.example.md`](../views/dashboard.example.md)
-- [`exports/context/workspace-context.md`](../exports/context/workspace-context.md)
-- [`exports/json/workspace-context.json`](../exports/json/workspace-context.json)
+### Applications
 
-These outputs are intentionally deterministic:
+```text
+draft → applied → interviewing → offer → accepted → rejected → withdrawn
+```
 
-- no machine-local absolute paths
-- no generation timestamps
-- stable sorting by entity metadata
+### Decisions
 
-That makes them safe for version control and easy to test.
+```text
+open → decided → revisited → archived
+```
 
-## Extending The Starter
+Explicit lifecycle states are always preferred over boolean flags.
 
-When adding a new entity type later, keep the pattern consistent:
+## Source vs Generated Content
 
-1. add a schema in `schema/`
-2. add a canonical subdirectory in `entities/`
-3. update validation and generation rules in `cli/personalos/`
-4. add believable sample records
-5. update the golden outputs and tests
+- **Source** content lives in `entities/`. It is authored and edited by humans.
+- **Generated** content lives in `views/` and `exports/`. It is produced by `personalos generate` commands and should not be hand-edited.
+- Generated content is committed to the repo so it is visible without running the CLI, but CI enforces that it stays in sync with source.
 
-If a proposed change blurs source data and generated artifacts, the default answer should be no.
+## CLI Role
+
+The `personalos` CLI is the single entry point for all operations:
+
+- **Validation** — check entities against schemas
+- **Scaffolding** — create new entities from schema-driven templates
+- **Generation** — produce dashboards, AI context exports, and relationship graphs
+- **Diagnostics** — detect setup issues and stale generated output
+
+See [docs/quickstart.md](quickstart.md) for usage.

@@ -1,57 +1,25 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://personalos.dev/schema/task.schema.json",
-  "title": "PersonalOS task entity",
+  "title": "PersonalOS Task",
+  "description": "Schema for task entities.",
+  "type": "object",
   "allOf": [
-    {
-      "$ref": "https://personalos.dev/schema/base.schema.json"
+    { "$ref": "_base.schema.json" }
+  ],
+  "properties": {
+    "type": { "const": "task" },
+    "status": {
+      "type": "string",
+      "enum": ["todo", "in_progress", "blocked", "done", "archived"]
     },
-    {
-      "type": "object",
-      "required": [
-        "project_id",
-        "priority",
-        "energy"
-      ],
-      "properties": {
-        "type": {
-          "const": "task"
-        },
-        "status": {
-          "enum": [
-            "backlog",
-            "ready",
-            "in_progress",
-            "blocked",
-            "done",
-            "archived"
-          ]
-        },
-        "project_id": {
-          "type": "string",
-          "pattern": "^prj_[a-z0-9_]+$"
-        },
-        "priority": {
-          "type": "string",
-          "enum": [
-            "low",
-            "medium",
-            "high"
-          ]
-        },
-        "energy": {
-          "type": "string",
-          "enum": [
-            "low",
-            "medium",
-            "high"
-          ]
-        },
-        "due_on": {
-          "type": "string",
-          "format": "date"
-        }
-      }
-    }
-  ]
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    },
+    "project_id": { "$ref": "_base.schema.json#/$defs/ulid_id" },
+    "due_date": { "$ref": "_base.schema.json#/$defs/iso_date" },
+    "assignee": { "type": "string" }
+  },
+  "required": ["id", "type", "slug", "title", "status", "priority", "created_at", "updated_at"]
 }

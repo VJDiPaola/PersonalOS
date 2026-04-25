@@ -1,71 +1,105 @@
 # PersonalOS Quickstart
 
-## Goal
+## Prerequisites
 
-Get from fresh clone to a validated, generated starter workspace in under 10 minutes.
+- Python 3.10+
+- pip
 
-## 1. Install
-
-From the repo root:
-
-```bash
-python -m pip install -e .[dev]
-```
-
-If you do not need the test dependencies, `python -m pip install -e .` is enough for normal CLI use.
-
-## 2. Validate The Sample Workspace
+## 1. Clone the Repo
 
 ```bash
-python -m personalos validate
+git clone https://github.com/YOUR_USERNAME/PersonalOS.git
+cd PersonalOS
 ```
 
-Expected result:
-
-- the repo validates 11 sample entities
-- relationships resolve cleanly
-- the sample content passes public-safety checks
-
-## 3. Generate The Sample Outputs
+## 2. Install the CLI
 
 ```bash
-python -m personalos generate all
+pip install -e .
 ```
 
-This writes:
+This installs the `personalos` command globally.
 
-- [`../views/dashboard.example.md`](../views/dashboard.example.md)
-- [`../exports/context/workspace-context.md`](../exports/context/workspace-context.md)
-- [`../exports/json/workspace-context.json`](../exports/json/workspace-context.json)
+## 3. Initialize (Optional)
 
-## 4. Run The Test Suite
+If starting from scratch (not using the starter entities):
 
 ```bash
-pytest
+personalos init
 ```
 
-The tests verify:
+This creates the `entities/`, `views/`, and `exports/` directories.
 
-- valid starter records pass
-- invalid fixtures fail for the right reasons
-- generated outputs still match the committed examples
-
-## 5. Make Your First Change
-
-The current starter does not yet ship `personalos new project` or `personalos new task`, so the fastest path is:
-
-1. copy one of the sample markdown files in `entities/`
-2. give it a new `id`, `slug`, `title`, and `summary`
-3. update any relationship fields like `project_id`
-4. run `python -m personalos validate`
-5. run `python -m personalos generate all`
-
-## Optional: Scaffold A Blank Workspace
-
-If you want to create the directory structure somewhere else first:
+## 4. Create an Entity
 
 ```bash
-python -m personalos init --path C:\\path\\to\\workspace
+personalos new project "My First Project"
 ```
 
-That command creates the standard folders so you can start populating them with your own schema files and entities.
+This generates `entities/projects/my-first-project.md` with a pre-filled frontmatter template derived from the project schema.
+
+## 5. Edit the Entity
+
+Open the generated file and fill in the details. The frontmatter fields are documented in [docs/schema.md](schema.md).
+
+## 6. Validate
+
+```bash
+personalos validate
+```
+
+Checks all entities against their JSON schemas and reports any errors.
+
+## 7. Generate Views and Exports
+
+```bash
+personalos generate all
+```
+
+This produces:
+
+- `views/dashboard.md` — a human-readable project dashboard
+- `views/graph.mmd` — a Mermaid relationship diagram
+- `exports/context/full-context.json` — full AI context export
+- `exports/context/per-project/` — per-project AI context files
+- `exports/json/` — individual JSON files per entity
+
+## 8. Check Everything
+
+```bash
+personalos check
+```
+
+Runs validation plus structural checks (orphan IDs, missing directories).
+
+## 9. Preview Changes
+
+```bash
+personalos diff
+```
+
+Shows what would change if generators were re-run, without writing files.
+
+## 10. Diagnose Issues
+
+```bash
+personalos doctor
+```
+
+Reports Python version, missing dependencies, schema issues, and directory problems.
+
+## Optional: Pre-Commit Hook
+
+Install [pre-commit](https://pre-commit.com/) to auto-validate before each commit:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+## Next Steps
+
+- Read [docs/architecture.md](architecture.md) for the full system design
+- Read [docs/schema.md](schema.md) for the complete field reference
+- Browse `entities/` for example records
+- Customize `personalos.toml` for your own ID prefixes and settings

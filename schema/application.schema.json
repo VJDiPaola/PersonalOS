@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://personalos.dev/schema/application.schema.json",
+  "title": "PersonalOS Application",
+  "description": "Schema for job application entities.",
+  "type": "object",
+  "allOf": [
+    { "$ref": "_base.schema.json" }
+  ],
+  "properties": {
+    "type": { "const": "application" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "applied", "interviewing", "offer", "accepted", "rejected", "withdrawn"]
+    },
+    "company": { "type": "string", "minLength": 1 },
+    "role_title": { "type": "string", "minLength": 1 },
+    "applied_date": { "$ref": "_base.schema.json#/$defs/iso_date" },
+    "url": { "type": "string", "format": "uri" }
+  },
+  "required": ["id", "type", "slug", "title", "status", "company", "role_title", "created_at", "updated_at"]
+}

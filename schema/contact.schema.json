@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://personalos.dev/schema/contact.schema.json",
+  "title": "PersonalOS Contact",
+  "description": "Schema for contact entities.",
+  "type": "object",
+  "allOf": [
+    { "$ref": "_base.schema.json" }
+  ],
+  "properties": {
+    "type": { "const": "contact" },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive"]
+    },
+    "role": { "type": "string" },
+    "organization": { "type": "string" },
+    "email": { "type": "string", "format": "email" }
+  },
+  "required": ["id", "type", "slug", "title", "status", "created_at", "updated_at"]
+}

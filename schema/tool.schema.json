@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://personalos.dev/schema/tool.schema.json",
+  "title": "PersonalOS Tool",
+  "description": "Schema for tool entities.",
+  "type": "object",
+  "allOf": [
+    { "$ref": "_base.schema.json" }
+  ],
+  "properties": {
+    "type": { "const": "tool" },
+    "status": {
+      "type": "string",
+      "enum": ["active", "evaluating", "retired"]
+    },
+    "url": { "type": "string", "format": "uri" },
+    "category": { "type": "string" }
+  },
+  "required": ["id", "type", "slug", "title", "status", "created_at", "updated_at"]
+}

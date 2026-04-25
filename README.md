@@ -1,92 +1,110 @@
 # PersonalOS
 
-PersonalOS is a public-safe, markdown-first starter for people who want a version-controlled personal operating system without turning a repo into a private vault.
+A markdown-first personal operating system. Track projects, tasks, decisions, reviews, and more — all in version-controlled markdown with YAML frontmatter.
 
-It ships a thin but real vertical slice: canonical markdown entities, schema-backed validation, deterministic generated views, and assistant-ready exports.
+## What This Is
 
-## What Works Today
+PersonalOS is a public starter template for building your own markdown-based personal dashboard. It provides:
 
-- A Python CLI with `personalos validate`, `personalos generate dashboard`, `personalos generate contexts`, and `personalos generate all`
-- Shipped entity coverage for `projects`, `tasks`, and `decisions`
-- JSON Schema contracts plus relationship and public-safety validation
-- Believable sample records you can inspect, copy, and extend
-- Checked-in generated examples in [`views/dashboard.example.md`](views/dashboard.example.md), [`exports/context/workspace-context.md`](exports/context/workspace-context.md), and [`exports/json/workspace-context.json`](exports/json/workspace-context.json)
-- Tests for validation failures, relationship integrity, and golden output parity
+- **JSON schemas** for 7 entity types (projects, tasks, tools, contacts, applications, decisions, reviews)
+- **A CLI** (`personalos`) for validation, scaffolding, and generation
+- **Generated dashboards** — human-readable markdown views
+- **AI context exports** — structured JSON for feeding to LLMs
+- **Relationship graphs** — Mermaid diagrams of entity connections
+- **Tests and CI** — schema validation, golden tests, and staleness checks
 
-## Who It Is For
-
-- Builders who want a cloneable starter instead of a vague “second brain” concept
-- People who like storing structured source data in markdown
-- Anyone who wants deterministic, AI-friendly exports without mixing source records and generated artifacts
-
-## Five-Minute Start
+## Quick Start
 
 ```bash
-python -m pip install -e .[dev]
-python -m personalos validate
-python -m personalos generate all
-pytest
+git clone https://github.com/YOUR_USERNAME/PersonalOS.git
+cd PersonalOS
+pip install -e .
 ```
 
-After that, inspect:
+### Create an entity
 
-- [`entities/`](entities)
-- [`views/dashboard.example.md`](views/dashboard.example.md)
-- [`exports/context/workspace-context.md`](exports/context/workspace-context.md)
-- [`docs/quickstart.md`](docs/quickstart.md)
-
-## Example Output
-
-```md
-## Snapshot
-
-- Projects: 3 total (1 active, 1 building, 1 deploy_ready)
-- Tasks: 5 total (1 blocked, 1 done, 1 in_progress, 2 ready)
-- Decisions: 3 total (2 decided, 1 proposed)
+```bash
+personalos new project "My Project"
 ```
 
-The full generated dashboard lives at [`views/dashboard.example.md`](views/dashboard.example.md).
+### Validate everything
 
-## How It Works
+```bash
+personalos validate
+```
+
+### Generate dashboard, exports, and graph
+
+```bash
+personalos generate all
+```
+
+## Architecture
 
 ```text
-schema/   -> contracts for each entity type
-entities/ -> canonical markdown records
-views/    -> generated human-readable outputs
-exports/  -> generated AI / JSON context
-cli/      -> Python package and command-line entrypoint
-tests/    -> fixtures, validation tests, and golden checks
-docs/     -> architecture, schema, quickstart, and roadmap
+schema/         → JSON Schema contracts (shared base + per-entity)
+entities/       → Canonical markdown records (source of truth)
+views/          → Generated dashboard and relationship graph
+exports/        → Generated AI context and JSON exports
+cli/            → CLI source (Python + Typer)
+tests/          → Schema, CLI, and golden tests
+docs/           → Architecture, schema reference, quickstart
 ```
 
-The source of truth stays in `entities/`. Everything in `views/` and `exports/` is generated from those records.
+Source lives in `entities/`. Generated output lives in `views/` and `exports/`. Schemas in `schema/` define the contracts.
 
-## Current Scope
+## Entity Types
 
-Shipped now:
+| Type | Prefix | Lifecycle States |
+|------|--------|------------------|
+| Project | `prj_` | idea → active → building → deploy_ready → shipped → reviewed → archived |
+| Task | `tsk_` | todo → in_progress → blocked → done → archived |
+| Tool | `tool_` | active → evaluating → retired |
+| Contact | `contact_` | active → inactive |
+| Application | `app_` | draft → applied → interviewing → offer → accepted → rejected → withdrawn |
+| Decision | `dec_` | open → decided → revisited → archived |
+| Review | `rev_` | draft → published → archived |
 
-- `project`
-- `task`
-- `decision`
+## CLI Commands
 
-Planned next:
+```text
+personalos init              Scaffold directory structure
+personalos new <type> "…"    Create entity from schema template
+personalos validate          Check entities against schemas
+personalos check             Validate + structural checks
+personalos generate all      Generate dashboard, graph, exports
+personalos generate dashboard
+personalos generate contexts
+personalos generate graph
+personalos review            Create a weekly review
+personalos archive --dry-run List archivable entities
+personalos doctor            Diagnose setup issues
+personalos diff              Preview generator changes
+```
 
-- `tool`
-- `contact`
-- `application`
-- `review`
+## Configuration
 
-The repo is intentionally proving one good end-to-end slice before expanding breadth.
+Customize via `personalos.toml`:
 
-## Docs
+```toml
+[id_prefixes]
+project = "prj_"
+task = "tsk_"
 
-- [`docs/quickstart.md`](docs/quickstart.md)
-- [`docs/architecture.md`](docs/architecture.md)
-- [`docs/schema.md`](docs/schema.md)
-- [`docs/blueprint.md`](docs/blueprint.md)
+[directories]
+entities = "entities"
+views = "views"
+exports = "exports"
+```
 
-## Why This Repo Exists
+## Documentation
 
-The real operating system that inspired this starter stays private so it can remain useful and personal.
+- [Architecture](docs/architecture.md) — system design and separation of concerns
+- [Schema Reference](docs/schema.md) — field definitions for all entity types
+- [Quickstart](docs/quickstart.md) — step-by-step setup guide
+- [Blueprint](docs/blueprint.md) — original design goals and principles
+- [Contributing](CONTRIBUTING.md) — how to add entities and run tests
 
-This public repo exists to share the architecture, tooling, and starter experience without shipping real contacts, private strategy, financial notes, or internal-only links.
+## License
+
+MIT

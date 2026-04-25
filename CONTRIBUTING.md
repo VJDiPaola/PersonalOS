@@ -1,47 +1,62 @@
-# Contributing
+# Contributing to PersonalOS
 
-Thanks for helping improve PersonalOS.
-
-## Contribution Standard
-
-This repo should feel like a professional public starter, not a cleaned-up private vault.
-
-Good changes make the repo:
-
-- easier to understand
-- easier to clone
-- safer to publish
-- more deterministic
-- more reusable
-
-## Guardrails
-
-- never add real personal contacts or job applications
-- never add secrets, tokens, or `.env` values
-- never add private strategy notes or internal-only links
-- prefer believable synthetic sample data over vague filler
-
-## Typical Workflow
+## Getting Started
 
 ```bash
-python -m pip install -e .[dev]
-python -m personalos validate
-python -m personalos generate all
-pytest
+git clone https://github.com/YOUR_USERNAME/PersonalOS.git
+cd PersonalOS
+pip install -e .
+pip install pytest pre-commit
+pre-commit install
 ```
 
-If you change the sample entities or generator logic, update the committed outputs in:
+## Adding an Entity
 
-- `views/`
-- `exports/`
-- `tests/golden/`
+```bash
+personalos new project "Your Project Name"
+```
 
-## Scope Guidance
+Edit the generated file in `entities/`, then validate:
 
-The current starter intentionally ships a thin vertical slice:
+```bash
+personalos validate
+```
 
-- `projects`
-- `tasks`
-- `decisions`
+## Running Tests
 
-Please prefer finishing that end-to-end experience before adding broader surface area.
+```bash
+pytest tests/ -v
+```
+
+## Updating Golden Files
+
+If you intentionally changed generator output:
+
+```bash
+pytest tests/test_golden.py --update-goldens
+```
+
+## Regenerating Views and Exports
+
+```bash
+personalos generate all
+```
+
+Always commit the regenerated `views/` and `exports/` output alongside your entity changes.
+
+## Public-Safe Data Rules
+
+This is a public starter repo. **Never** add:
+
+- Real personal contacts
+- Real job applications
+- Financial or strategy details
+- Secrets or `.env` values
+
+**Always** use synthetic, believable sample data.
+
+## Code Quality
+
+- Run `personalos check` before submitting a PR
+- Ensure all tests pass
+- Keep generated output in sync with source entities

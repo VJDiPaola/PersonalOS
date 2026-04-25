@@ -1,33 +1,29 @@
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools>=68.0", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "personalos"
 version = "0.1.0"
-description = "A public-safe markdown-first personal operating system starter."
+description = "A markdown-first personal operating system CLI."
 readme = "README.md"
-requires-python = ">=3.11"
-license = { text = "MIT" }
+license = {text = "MIT"}
+requires-python = ">=3.10"
 dependencies = [
-  "jsonschema>=4.22.0",
-  "PyYAML>=6.0.2",
-]
-
-[project.optional-dependencies]
-dev = [
-  "pytest>=8.2.0",
+    "typer>=0.9",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "python-frontmatter>=1.0",
+    "jsonschema>=4.20",
+    "python-ulid>=2.0",
+    "tomli>=2.0; python_version < '3.11'",
 ]
 
 [project.scripts]
-personalos = "personalos.cli:main"
-
-[tool.setuptools]
-package-dir = { "" = "cli" }
+personalos = "cli.personalos.main:app"
 
 [tool.setuptools.packages.find]
-where = ["cli"]
+include = ["cli*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"

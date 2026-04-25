@@ -1,5 +1,3 @@
-"""Public starter package for the PersonalOS repository."""
-
-__all__ = ["__version__"]
+"""PersonalOS CLI — a markdown-first personal operating system."""
 
 __version__ = "0.1.0"

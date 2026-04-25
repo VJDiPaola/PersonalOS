@@ -1,104 +1,109 @@
-# PersonalOS Schema Guide
+# PersonalOS Schema Reference
 
-## Base Contract
+## Overview
 
-Every shipped entity type inherits the same base fields.
+Entity schemas are defined as JSON Schema files in `schema/`. A shared base (`_base.schema.json`) defines identity and metadata fields. Each entity type extends the base with its own fields.
 
-| Field | Required | Purpose |
-| --- | --- | --- |
-| `id` | yes | Stable identifier for cross-entity references |
-| `type` | yes | Entity kind: `project`, `task`, or `decision` |
-| `slug` | yes | Human-readable, URL-safe identifier |
-| `title` | yes | Short display title |
-| `status` | yes | Explicit lifecycle state |
-| `created_at` | yes | Creation date in `YYYY-MM-DD` form |
-| `updated_at` | yes | Last meaningful update date |
-| `tags` | yes | Searchable, low-cardinality labels |
-| `summary` | yes | One-sentence explanation of why the record exists |
+## Shared Base Fields
 
-The base contract is defined in [`schema/base.schema.json`](../schema/base.schema.json).
+Every entity includes these fields (defined in `schema/_base.schema.json`):
 
-## Project Schema
+- **`id`** (string, required) — prefixed ULID, e.g. `prj_01JYV4R2D3J7M7X9Q0N2K8A6P1`
+- **`type`** (string, required) — one of: `project`, `task`, `tool`, `contact`, `application`, `decision`, `review`
+- **`slug`** (string, required) — URL-safe identifier, lowercase, hyphen-separated
+- **`title`** (string, required) — human-readable display name
+- **`status`** (string, required) — lifecycle state (enum varies by type)
+- **`created_at`** (string, required) — ISO 8601 date (`YYYY-MM-DD`)
+- **`updated_at`** (string, required) — ISO 8601 date (`YYYY-MM-DD`)
+- **`tags`** (array of strings, optional) — freeform labels
 
-Defined in [`schema/project.schema.json`](../schema/project.schema.json).
+## ID Format
 
-Additional required fields:
+IDs use a type prefix followed by a ULID:
 
-- `priority`: `low`, `medium`, `high`
-- `horizon`: `now`, `next`, `later`
+```text
+<prefix><ulid>
 
-Allowed statuses:
+prj_01JYV4R2D3J7M7X9Q0N2K8A6P1
+tsk_01JYV5A1B2C3D4E5F6G7H8J9K0
+```
 
-- `idea`
-- `active`
-- `building`
-- `deploy_ready`
-- `shipped`
-- `reviewed`
-- `archived`
+Prefixes: `prj_`, `tsk_`, `tool_`, `contact_`, `app_`, `dec_`, `rev_`
 
-## Task Schema
+## Per-Entity Fields
 
-Defined in [`schema/task.schema.json`](../schema/task.schema.json).
+### Project (`schema/project.schema.json`)
 
-Additional required fields:
+- **`status`** — enum: `idea`, `active`, `building`, `deploy_ready`, `shipped`, `reviewed`, `archived`
+- **`priority`** — enum: `low`, `medium`, `high`, `critical`
+- **`tool_ids`** — array of tool entity IDs
+- **`contact_ids`** — array of contact entity IDs
+- **`related_entity_ids`** — array of any entity IDs
 
-- `project_id`
-- `priority`
-- `energy`
+### Task (`schema/task.schema.json`)
 
-Optional fields:
+- **`status`** — enum: `todo`, `in_progress`, `blocked`, `done`, `archived`
+- **`priority`** — enum: `low`, `medium`, `high`, `critical`
+- **`project_id`** — ID of the parent project (optional)
+- **`due_date`** — ISO 8601 date (optional)
+- **`assignee`** — string (optional)
 
-- `due_on`
+### Tool (`schema/tool.schema.json`)
 
-Allowed statuses:
+- **`status`** — enum: `active`, `evaluating`, `retired`
+- **`url`** — URL string (optional)
+- **`category`** — string (optional), e.g. `design`, `engineering`, `communication`
 
-- `backlog`
-- `ready`
-- `in_progress`
-- `blocked`
-- `done`
-- `archived`
+### Contact (`schema/contact.schema.json`)
 
-## Decision Schema
+- **`status`** — enum: `active`, `inactive`
+- **`role`** — string (optional), e.g. `designer`, `engineer`
+- **`organization`** — string (optional)
+- **`email`** — string (optional)
 
-Defined in [`schema/decision.schema.json`](../schema/decision.schema.json).
+### Application (`schema/application.schema.json`)
 
-Additional required fields:
+- **`status`** — enum: `draft`, `applied`, `interviewing`, `offer`, `accepted`, `rejected`, `withdrawn`
+- **`company`** — string (required)
+- **`role_title`** — string (required)
+- **`applied_date`** — ISO 8601 date (optional)
+- **`url`** — URL string (optional)
 
-- `project_id`
-- `decision_date`
-- `outcome`
-- `related_task_ids`
+### Decision (`schema/decision.schema.json`)
 
-Allowed statuses:
+- **`status`** — enum: `open`, `decided`, `revisited`, `archived`
+- **`question`** — string (required), the decision question
+- **`outcome`** — string (optional), the chosen answer
+- **`decided_date`** — ISO 8601 date (optional)
+- **`related_entity_ids`** — array of any entity IDs
 
-- `proposed`
-- `decided`
-- `rejected`
-- `archived`
+### Review (`schema/review.schema.json`)
 
-Allowed outcomes:
+- **`status`** — enum: `draft`, `published`, `archived`
+- **`period`** — string (required), e.g. `2026-W14`
+- **`highlights`** — array of strings (optional)
+- **`lowlights`** — array of strings (optional)
+- **`next_actions`** — array of strings (optional)
 
-- `commit`
-- `hold`
-- `revisit`
+## Entity File Format
 
-## Relationship Rules
+Entities are markdown files with YAML frontmatter:
 
-The starter enforces a few opinionated integrity checks:
+```yaml
+---
+id: prj_01JYV4R2D3J7M7X9Q0N2K8A6P1
+type: project
+slug: portfolio-site-refresh
+title: Portfolio Site Refresh
+status: building
+priority: high
+created_at: 2026-04-04
+updated_at: 2026-04-04
+tags: [portfolio, design, writing]
+tool_ids: [tool_01JYV6X1A2B3C4D5E6F7G8H9J0]
+---
 
-- every `task.project_id` must point to a real project
-- every `decision.project_id` must point to a real project
-- every value in `decision.related_task_ids` must point to a real task
-- IDs and slugs must be unique across shipped records
+Free-form notes, context, and documentation go here.
+```
 
-## Public-Safety Rules
-
-Because this repo is a public starter, entity validation rejects obviously private content such as:
-
-- email addresses
-- secret-like tokens
-- finance-heavy private terms like `salary`, `runway`, or `ssn`
-
-That check is intentionally conservative for sample data. If you clone this starter for private personal use, you can relax those rules later.
+The frontmatter is validated against the JSON schema for the entity's `type`. The body content below the frontmatter is freeform markdown.

@@ -1,0 +1,24 @@
+---
+id: tsk_01JYV5C3D4E5F6G7H8J9K0W1M2
+type: task
+slug: write-cli-readme
+title: Write CLI README
+status: todo
+priority: high
+project_id: prj_01JYV4T4F5G6H7J8K9M0N1P2Q3
+created_at: 2026-03-28
+updated_at: 2026-04-01
+tags: [docs, open-source]
+---
+
+# Write CLI README
+
+Write a comprehensive README for the open source CLI tool.
+
+## Sections Needed
+
+- What it does (one paragraph)
+- Installation instructions
+- Quick start examples
+- Configuration reference
+- Contributing guide link
