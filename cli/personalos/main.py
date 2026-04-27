@@ -4,18 +4,15 @@ from __future__ import annotations
 
 import datetime
 import json
+import pathlib
 import sys
-from pathlib import Path
-from typing import Optional
 
 import typer
 
 from . import __version__
 from .config import ENTITY_SUBDIRS, ENTITY_TYPES, find_root, load_config
 from .entities import (
-    entities_by_type,
     entities_dir,
-    entity_index,
     exports_dir,
     load_all_entities,
     schema_dir,
@@ -54,10 +51,10 @@ def init() -> None:
     for d in dirs_to_create:
         if not d.exists():
             d.mkdir(parents=True, exist_ok=True)
-            gitkeep = d / ".gitkeep"
-            if not any(d.iterdir()):
-                gitkeep.touch()
             created += 1
+        # Drop a .gitkeep so empty dirs survive a commit.
+        if not any(d.iterdir()):
+            (d / ".gitkeep").touch()
     typer.echo(f"Initialized {created} directories.")
 
 
@@ -124,6 +121,7 @@ def new_entity(
     s_dir = schema_dir(root, config)
     schema_file = s_dir / f"{entity_type}.schema.json"
     extra_fields: dict[str, str] = {}
+    default_status = "active"
     if schema_file.exists():
         with open(schema_file, "r", encoding="utf-8") as f:
             schema = json.load(f)
@@ -136,13 +134,7 @@ def new_entity(
             if field_name in required:
                 extra_fields[field_name] = _default_for_schema(field_schema)
 
-    # Determine default status
-    s_file = s_dir / f"{entity_type}.schema.json"
-    default_status = "active"
-    if s_file.exists():
-        with open(s_file, "r", encoding="utf-8") as f:
-            s = json.load(f)
-        status_enum = s.get("properties", {}).get("status", {}).get("enum", [])
+        status_enum = props.get("status", {}).get("enum", [])
         if status_enum:
             default_status = status_enum[0]
 
@@ -319,12 +311,21 @@ def review_create() -> None:
 # ---------------------------------------------------------------------------
 @app.command()
 def archive(
-    dry_run: bool = typer.Option(True, "--dry-run/--execute", help="List entities eligible for archival."),
+    dry_run: bool = typer.Option(True, "--dry-run/--execute", help="List entities eligible for archival; pass --execute to move them."),
 ) -> None:
-    """List (or archive) entities eligible for archival."""
+    """List (or archive) entities eligible for archival.
+
+    Archival moves the source markdown into a sibling `archive/` directory under
+    its entity type (e.g. ``entities/projects/foo.md`` →
+    ``entities/projects/archive/foo.md``). Loaders ignore the ``archive/``
+    subdirectory, so archived entities drop out of generators and validation.
+    """
     root = find_root()
     entities = load_all_entities(root)
-    archivable_statuses = {"shipped", "reviewed", "done", "decided", "accepted", "rejected", "withdrawn", "published", "retired"}
+    archivable_statuses = {
+        "shipped", "reviewed", "done", "decided", "accepted",
+        "rejected", "withdrawn", "published", "retired",
+    }
     eligible = [e for e in entities if e.get("status") in archivable_statuses]
 
     if not eligible:
@@ -337,6 +338,18 @@ def archive(
 
     if dry_run:
         typer.echo("\nRun with --execute to archive these entities.")
+        return
+
+    moved = 0
+    for e in eligible:
+        src = pathlib.Path(e["_path"])
+        dst_dir = src.parent / "archive"
+        dst_dir.mkdir(parents=True, exist_ok=True)
+        dst = dst_dir / src.name
+        src.rename(dst)
+        typer.echo(f"  Archived {dst.relative_to(root)}")
+        moved += 1
+    typer.echo(f"\nArchived {moved} entity(ies).")
 
 
 # ---------------------------------------------------------------------------
@@ -376,7 +389,7 @@ def doctor() -> None:
 
     # Dependencies
     missing_deps: list[str] = []
-    for pkg in ["typer", "pydantic", "yaml", "frontmatter", "jsonschema", "ulid"]:
+    for pkg in ["typer", "yaml", "frontmatter", "jsonschema", "referencing", "ulid"]:
         try:
             __import__(pkg)
         except ImportError:
@@ -402,53 +415,113 @@ def doctor() -> None:
 # ---------------------------------------------------------------------------
 @app.command("diff")
 def diff_cmd() -> None:
-    """Show what would change if generators were re-run."""
-    import difflib
+    """Show what would change if generators were re-run.
 
-    from .generators import generate_ai_contexts, generate_dashboard, generate_graph, generate_json_export
+    Compares both ``views/`` and ``exports/`` against a fresh generation in a
+    temporary directory so the working tree is never touched.
+    """
+    import difflib
+    import shutil
+    import tempfile
+
+    from .generators import (
+        generate_ai_contexts,
+        generate_dashboard,
+        generate_graph,
+        generate_json_export,
+    )
 
     root = find_root()
     config = load_config(root)
+    v_dir = views_dir(root, config)
+    e_dir = exports_dir(root, config)
     changes_found = False
 
-    # Check dashboard
-    v_dir = views_dir(root, config)
+    def _diff(rel_path: str, current: str | None, generated: str) -> bool:
+        if current == generated:
+            return False
+        if current is None:
+            typer.echo(f"+ {rel_path} (new file)")
+        else:
+            typer.echo(f"--- {rel_path}")
+            for line in difflib.unified_diff(
+                current.splitlines(),
+                generated.splitlines(),
+                fromfile=f"{rel_path} (current)",
+                tofile=f"{rel_path} (generated)",
+                lineterm="",
+            ):
+                typer.echo(line)
+        return True
+
+    # Render dashboard + graph (pure functions; no disk write).
     dashboard_path = v_dir / "dashboard.md"
     new_dashboard = generate_dashboard(root)
-    if dashboard_path.exists():
-        old = dashboard_path.read_text(encoding="utf-8")
-        if old != new_dashboard:
-            changes_found = True
-            typer.echo("--- views/dashboard.md")
-            for line in difflib.unified_diff(
-                old.splitlines(), new_dashboard.splitlines(),
-                fromfile="views/dashboard.md (current)",
-                tofile="views/dashboard.md (generated)",
-                lineterm="",
-            ):
-                typer.echo(line)
-    else:
+    if _diff(
+        "views/dashboard.md",
+        dashboard_path.read_text(encoding="utf-8") if dashboard_path.exists() else None,
+        new_dashboard,
+    ):
         changes_found = True
-        typer.echo("+ views/dashboard.md (new file)")
 
-    # Check graph
     graph_path = v_dir / "graph.mmd"
     new_graph = generate_graph(root)
-    if graph_path.exists():
-        old = graph_path.read_text(encoding="utf-8")
-        if old != new_graph:
-            changes_found = True
-            typer.echo("\n--- views/graph.mmd")
-            for line in difflib.unified_diff(
-                old.splitlines(), new_graph.splitlines(),
-                fromfile="views/graph.mmd (current)",
-                tofile="views/graph.mmd (generated)",
-                lineterm="",
-            ):
-                typer.echo(line)
-    else:
+    if _diff(
+        "views/graph.mmd",
+        graph_path.read_text(encoding="utf-8") if graph_path.exists() else None,
+        new_graph,
+    ):
         changes_found = True
-        typer.echo("+ views/graph.mmd (new file)")
+
+    # Render JSON + AI context exports into a sandbox so we can diff without
+    # mutating the real exports/ tree.
+    with tempfile.TemporaryDirectory() as tmp_root:
+        tmp_root_path = pathlib.Path(tmp_root)
+        # Mirror the layout that exports_dir() expects: <root>/<exports_dirname>.
+        sandbox_exports = tmp_root_path / e_dir.name
+        sandbox_exports.mkdir(parents=True, exist_ok=True)
+        # Write a minimal config so exports_dir() resolves correctly.
+        (tmp_root_path / "personalos.toml").write_text(
+            (root / "personalos.toml").read_text(encoding="utf-8")
+            if (root / "personalos.toml").exists()
+            else "",
+            encoding="utf-8",
+        )
+        # Symlink/copy entities + schema so the generators find the data.
+        for name in ("entities", "schema"):
+            src = root / config["directories"].get(name, name)
+            if src.exists():
+                shutil.copytree(src, tmp_root_path / src.name, dirs_exist_ok=True)
+
+        generate_ai_contexts(tmp_root_path)
+        generate_json_export(tmp_root_path)
+
+        for generated_file in sorted(sandbox_exports.rglob("*")):
+            if not generated_file.is_file():
+                continue
+            rel = generated_file.relative_to(sandbox_exports)
+            current_file = e_dir / rel
+            generated_text = generated_file.read_text(encoding="utf-8")
+            current_text = (
+                current_file.read_text(encoding="utf-8") if current_file.exists() else None
+            )
+            if _diff(f"exports/{rel.as_posix()}", current_text, generated_text):
+                changes_found = True
+
+        # Detect files that exist on disk but the generator no longer emits.
+        sandbox_rels = {
+            p.relative_to(sandbox_exports)
+            for p in sandbox_exports.rglob("*")
+            if p.is_file()
+        }
+        if e_dir.exists():
+            for current_file in sorted(e_dir.rglob("*")):
+                if not current_file.is_file():
+                    continue
+                rel = current_file.relative_to(e_dir)
+                if rel not in sandbox_rels:
+                    typer.echo(f"- exports/{rel.as_posix()} (no longer generated)")
+                    changes_found = True
 
     if not changes_found:
         typer.echo("No changes detected. Generated output is up to date.")

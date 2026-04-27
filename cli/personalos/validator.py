@@ -6,27 +6,33 @@ import json
 from pathlib import Path
 from typing import Any
 
-from jsonschema import Draft202012Validator, RefResolver, ValidationError
+from jsonschema import Draft202012Validator
+from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT202012
 
 from .config import ENTITY_TYPES
 from .entities import load_all_entities, schema_dir
 
 
-def _build_resolver(schema_path: Path) -> tuple[dict[str, Any], RefResolver]:
-    """Build a JSON Schema resolver with all schema files loaded."""
+def _build_registry(schema_path: Path) -> tuple[dict[str, Any], Registry]:
+    """Load every ``*.schema.json`` and build a referencing Registry.
+
+    The store maps both ``$id`` and bare filename to the loaded schema dict so
+    callers can look up schemas by either key.
+    """
     store: dict[str, Any] = {}
+    resources: list[tuple[str, Resource]] = []
     for schema_file in schema_path.glob("*.schema.json"):
         with open(schema_file, "r", encoding="utf-8") as f:
             schema = json.load(f)
+        resource = Resource(contents=schema, specification=DRAFT202012)
         schema_id = schema.get("$id", schema_file.name)
         store[schema_id] = schema
-        # Also store by filename for relative $ref resolution
         store[schema_file.name] = schema
-    return store, RefResolver(
-        base_uri=f"file:///{schema_path.as_posix()}/",
-        referrer={},
-        store=store,
-    )
+        resources.append((schema_id, resource))
+        resources.append((schema_file.name, resource))
+    registry: Registry = Registry().with_resources(resources)
+    return store, registry
 
 
 def _get_schema_for_type(
@@ -55,7 +61,7 @@ def validate_entities(
     if not s_dir.exists():
         return [{"file": "", "field": "", "message": f"Schema directory not found: {s_dir}"}]
 
-    store, resolver = _build_resolver(s_dir)
+    store, registry = _build_registry(s_dir)
     entities = load_all_entities(root)
     errors: list[dict[str, str]] = []
 
@@ -91,7 +97,7 @@ def validate_entities(
         # Strip internal keys before validation
         data = {k: v for k, v in entity.items() if not k.startswith("_")}
 
-        validator = Draft202012Validator(schema, resolver=resolver)
+        validator = Draft202012Validator(schema, registry=registry)
         for error in sorted(validator.iter_errors(data), key=lambda e: list(e.path)):
             field = ".".join(str(p) for p in error.absolute_path) or "(root)"
             errors.append({
