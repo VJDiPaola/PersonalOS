@@ -25,9 +25,6 @@ def generate_dashboard(root: Path) -> str:
     by_type = entities_by_type(entities)
     index = entity_index(entities)
     lines: list[str] = ["# PersonalOS Dashboard", ""]
-    today_str = _today()
-    lines.append(f"*Generated on {today_str}*")
-    lines.append("")
 
     # Projects
     projects = by_type.get("project", [])
@@ -136,7 +133,6 @@ def generate_ai_contexts(root: Path) -> None:
 
     # Full context
     full_context = {
-        "generated_at": _today(),
         "entity_count": len(entities),
         "entities": {
             etype: [_clean(e) for e in elist]
@@ -158,7 +154,6 @@ def generate_ai_contexts(root: Path) -> None:
         linked_tools = [index[tid] for tid in linked_tool_ids if tid in index]
 
         project_context = {
-            "generated_at": _today(),
             "project": _clean(project),
             "tasks": [_clean(t) for t in linked_tasks],
             "tools": [_clean(t) for t in linked_tools],
@@ -260,9 +255,3 @@ def _mermaid_shape(entity_type: str) -> tuple[str, str]:
         "application": ("(", ")"),
     }
     return shapes.get(entity_type, ("[", "]"))
-
-
-def _today() -> str:
-    """Return today's date as ISO string."""
-    import datetime
-    return datetime.date.today().isoformat()
